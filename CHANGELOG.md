@@ -25,8 +25,10 @@ version and is announced here first.
   Nothing changes for a caller that does not add the job.
 - `scripts/pr-provenance.sh` and its test, which is the whole of that workflow and is what a
   contributor can run against a body before opening anything.
-- This repository calls it on its own pull requests, as it already does the guard, and its pull
-  request template opens with the no-phase form.
+- `provenance-self.yml` — this repository calling it on its own pull requests, as `autopilot.yml`
+  calls `review.yml`. Its own file rather than a job in `ci.yml` so that an `edited` body can clear
+  the check without a commit nobody needs, and a caller wants the same shape. Its pull request
+  template opens with the no-phase form.
 
 ## [1.3.0] — 2026-09-23
 

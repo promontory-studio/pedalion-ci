@@ -85,15 +85,25 @@ string your branch ruleset must require. Name the job `autopilot-guard` and requ
 ### 3. Declare what authorized the pull request
 
 ```yaml
-# .github/workflows/ci.yml
+# .github/workflows/provenance.yml
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
   provenance:
-    if: github.event_name == 'pull_request'
     uses: OWNER/pedalion-ci/.github/workflows/provenance.yml@<sha>
     with:
       body: ${{ github.event.pull_request.body }}
       pr-author: ${{ github.event.pull_request.user.login }}
       pr-author-type: ${{ github.event.pull_request.user.type }}
 ```
+
+**Its own workflow file, and `edited` in the trigger.** A body this check refuses is fixed by
+editing the body, and `pull_request` does not carry `edited` unless you ask for it — so inside your
+CI workflow the author has to push a commit they do not need in order to clear a check about prose.
+Adding `edited` to the CI workflow instead re-runs your whole suite every time somebody fixes a typo
+in a title.
 
 The body must open with a fenced `json` block naming the plan and phase the work came from:
 

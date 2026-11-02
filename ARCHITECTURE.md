@@ -10,7 +10,7 @@ whether a change someone else made is safe.
 
 ## 1. The shape
 
-Seven workflow files. **Five are reusable** — a caller names them in `uses:` — and two exist only
+Eight workflow files. **Five are reusable** — a caller names them in `uses:` — and three exist only
 to run this repository's own CI:
 
 ```
@@ -19,9 +19,9 @@ to run this repository's own CI:
 │ .github/           │          │  guard.yml            │          │ ci.yml                 │
 │   autopilot.json   │─────────▶│  review.yml           │          │   check                │
 │ a caller workflow  │  uses:   │  promote.yml          │◀─────────│   guard      (dogfood) │
-│ vars + secrets     │          │  notify-failure.yml   │  local   │   provenance (dogfood) │
-└────────────────────┘          │  provenance.yml       │          │   codeql               │
-                                ├───────────────────────┤          │ autopilot.yml          │
+│ vars + secrets     │          │  notify-failure.yml   │  local   │   codeql               │
+└────────────────────┘          │  provenance.yml       │          │ autopilot.yml          │
+                                ├───────────────────────┤          │ provenance-self.yml    │
                                 │  actions/             │          └────────────────────────┘
                                 │    setup-node-ci      │
                                 │    codeql-scan        │
