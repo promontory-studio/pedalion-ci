@@ -1,6 +1,6 @@
 # Contributing
 
-Node 22 or newer (`engines.node` in `package.json`). `npm ci`, then the four things the `check`
+Node 22 or newer (`engines.node` in `package.json`). `npm ci`, then the five things the `check`
 job runs on every pull request:
 
 ```bash
@@ -8,10 +8,13 @@ npm run typecheck
 npm test
 ./scripts/no-entity-leak.sh
 ./scripts/no-entity-leak.test.sh
+./scripts/pr-provenance.test.sh
 ```
 
-CI also runs the guard against this repository's own pull request, and CodeQL. Neither has anything
-to run by hand.
+CI also runs the guard and the declaration check against this repository's own pull request, and
+CodeQL. None of the three has anything to run by hand — but the declaration check reads the body you
+are about to write, so [the template](.github/PULL_REQUEST_TEMPLATE.md) opens with the block it
+wants.
 
 [ARCHITECTURE.md](ARCHITECTURE.md) is the contract behind the workflows: read it before changing
 one. [CHANGELOG.md](CHANGELOG.md) gets an entry under `[Unreleased]` for anything a caller would
@@ -52,7 +55,8 @@ allow-list, and an agent fix with no test failing outright — are in
 
 - **Applicability is an input, never a job-level `if:`.** A job skipped by a job-level `if:`
   reports SKIPPED, and a *required* check that reports SKIPPED blocks the merge forever. That is
-  why `guard.yml` takes `authors` and `skip-branch-prefixes` and keeps running.
+  why `guard.yml` takes `authors` and `skip-branch-prefixes` and keeps running, and why
+  `provenance.yml` exempts a bot inside the script rather than skipping the job.
 - **`review.yml` triggers from `workflow_run`, not from inside CI.** A job that waits on the
   checks of the run it belongs to is waiting on itself, and the pull request never merges.
 - **Every secret is a named input, and `mode` is an input too.** `secrets: inherit` does not cross

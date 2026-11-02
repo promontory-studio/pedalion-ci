@@ -24,7 +24,7 @@ does not scale — not the writing, and not the CI.
 > rate-limited by the author's attention, so every safeguard that worked only because someone
 > would eventually have noticed has quietly stopped working.
 
-These are four reusable GitHub Actions workflows. Each makes a check a reader would have made, in a
+These are five reusable GitHub Actions workflows. Each makes a check a reader would have made, in a
 place the thing being checked cannot reach:
 
 | The check a reader would have made | Why re-running CI does not make it | Where it is made instead |
@@ -33,13 +33,19 @@ place the thing being checked cannot reach:
 | Did it widen what it is allowed to change? | The diff includes the file that says what it may change | **`guard.yml`** — `.github/**` and package manifests are forbidden to the agent in every repository, whatever the config says. |
 | Did anything that is not a model agree to this? | The reviewer is the same kind of thing as the author | **`review.yml`** decides the merge in the shell, on an approval that still sits at the head CI tested, with no vetoing label. |
 | Is this shipping because it is good, or because nobody has complained yet? | Silence and a broken error pipeline produce identical evidence | **`promote.yml`** requires a soak window, a green tip, no error report naming a build in the range, and a canary proving the report pipeline is still alive. |
+| What authorized this work? | A diff says what changed and never what asked for it, and the branch that would have said is deleted at the merge | **`provenance.yml`** refuses a body that does not open by naming the plan and phase behind it — or by declaring that none did, and what brought it into existence instead. |
 
-None of the four is sufficient alone, and that is the argument for the set. A proved test says
+None of the first four is sufficient alone, and that is the argument for the set. A proved test says
 nothing about whether the same change rewrote the rules it is judged by. A clean guard says nothing
 about who agreed to merge. An approved merge says nothing about whether what it merged into is fit
 to release. Together they say one sentence that no single check says: *this diff was proved, did
 not widen its own permissions, was agreed to by something that is not a model, and has since sat in
 front of real users without complaint.*
+
+**The fifth asks a different question, which is why it is the one that does not judge the diff.**
+The four above ask whether a change is safe to merge. `provenance.yml` asks what authorized it —
+and a change that passes all four while saying nothing about what asked for it is safe to merge and
+impossible to account for afterwards.
 
 ## Proving the fix — `guard.yml`
 
@@ -141,6 +147,31 @@ nothing.
 So the first failure of a given title opens an issue and every recurrence comments on it. One
 thread per broken thing, carrying its own history, closing when it is fixed. This is the cheapest
 workflow here and the one with the most observable record.
+
+## Naming what authorized it — `provenance.yml`
+
+A pull request body is the one place a piece of work can say what authorized it and still be
+readable after the work has landed. The branch cannot: the cleanup rule that keeps a repository
+legible deletes it at the merge, and whatever was keying off it is then keying off nothing.
+
+So the body opens with a fenced `json` block naming the plan and the phase, and quotes that phase's
+summary beneath it — the form is `doctrine/git.md`'s in the
+[shared protocol](https://github.com/pablo-tech/principia), not this repository's, and the block is
+for whatever has to find the work later without a person while the quotation is for the person. A
+pull request that no phase authorized says *that*, with a reason, so an absent declaration is a
+defect rather than an ambiguity.
+
+What this workflow adds is that something refuses it. The declaration had a reader before it had a
+check, and a reader reports a missing declaration as *undetermined* — which is indistinguishable
+from work nobody started, arrives weeks later, and lands on whoever is asking rather than on
+whoever could still have fixed the body. This is the only moment the body is still somebody's to
+fix.
+
+It reads the body and nothing else: no checkout of the caller, no package install, no token, no
+permissions. **A dependency bot is exempt by author type**, and that is a declared hole rather than
+an oversight — a bot composes its own body and cannot be taught a form, and a gate that refuses
+every bump is switched off within a day. What the exemption costs is that an automated pull request
+joins to no phase, which is the right answer for it: none authorized it.
 
 ## What it has actually caught
 

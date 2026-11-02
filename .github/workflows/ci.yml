@@ -29,6 +29,7 @@ jobs:
       # The boundary is the product here, so it is a check and not a review note.
       - run: ./scripts/no-entity-leak.sh
       - run: ./scripts/no-entity-leak.test.sh
+      - run: ./scripts/pr-provenance.test.sh
 
   # Dogfooding: the guard that every caller gets, run against this repository's own pull requests.
   guard:
@@ -39,6 +40,17 @@ jobs:
       head-sha: ${{ github.event.pull_request.head.sha }}
       authors: dependabot[bot],pedalion-ci[bot]
       pr-author: ${{ github.event.pull_request.user.login }}
+
+  # Dogfooding, the same way the guard is: the declaration check every caller gets, run against this
+  # repository's own pull requests. It arms this repository with no pin to move, which is what makes
+  # it the first corpus the rule is enforced over.
+  provenance:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/provenance.yml
+    with:
+      body: ${{ github.event.pull_request.body }}
+      pr-author: ${{ github.event.pull_request.user.login }}
+      pr-author-type: ${{ github.event.pull_request.user.type }}
 
   codeql:
     runs-on: ubuntu-latest

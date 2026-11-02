@@ -82,7 +82,43 @@ promotion, is exempted by head-branch prefix rather than by skipping the job.
 string your branch ruleset must require. Name the job `autopilot-guard` and require
 `autopilot-guard / guard` instead. See [ARCHITECTURE.md](ARCHITECTURE.md#2-the-job-id-becomes-the-check-name).
 
-### 3. Review and merge
+### 3. Declare what authorized the pull request
+
+```yaml
+# .github/workflows/ci.yml
+  provenance:
+    if: github.event_name == 'pull_request'
+    uses: OWNER/pedalion-ci/.github/workflows/provenance.yml@<sha>
+    with:
+      body: ${{ github.event.pull_request.body }}
+      pr-author: ${{ github.event.pull_request.user.login }}
+      pr-author-type: ${{ github.event.pull_request.user.type }}
+```
+
+The body must open with a fenced `json` block naming the plan and phase the work came from:
+
+```json
+{
+  "plan": "planning/<repo>/<path>.md",
+  "phase": "<the phase's label>",
+  "pre_sha": "<the commit this phase rewinds to>",
+  "verify": "<the phase's Verify row, verbatim>",
+  "undo": "<the phase's Undo row, verbatim>",
+  "door": "<the phase's Door row, verbatim>"
+}
+```
+
+A pull request that no phase authorized declares that instead, and says what brought it into
+existence — `{ "plan": null, "phase": null, "reason": "a dependency bump" }`. Put the block in
+`.github/PULL_REQUEST_TEMPLATE.md` pre-filled with that second form and nobody meets the check by
+being refused by it.
+
+**A bot is exempt by author type, so this does not block a dependency bump.** Pass
+`pr-author-type` or every bot pull request is refused: with the input empty, no author is a bot as
+far as the check is concerned. `exempt-authors` is for an App or token-driven author the forge
+reports as a person.
+
+### 4. Review and merge
 
 ```yaml
 # .github/workflows/autopilot.yml
@@ -142,7 +178,7 @@ Two things make it safe, and both are load-bearing:
 a merge pushed with `GITHUB_TOKEN` starts no downstream workflow — your release job would never
 fire. Everything else works with `GITHUB_TOKEN` alone.
 
-### 4. Promote on a soak
+### 5. Promote on a soak
 
 ```yaml
   promote:
@@ -171,7 +207,7 @@ refuses to promote while the report pipeline itself has gone quiet, which is the
 `keep-paths` are restored from the base branch, for the files that are deliberately different
 there. A promotion opens a pull request; it never pushes to the base branch.
 
-### 5. Hear about failures
+### 6. Hear about failures
 
 ```yaml
   notify-failure:
@@ -196,6 +232,7 @@ workflow** before any job starts, so what each one needs is part of its contract
 | Workflow | What the calling job must grant |
 |---|---|
 | `guard.yml` | nothing |
+| `provenance.yml` | nothing |
 | `notify-failure.yml` | nothing, unless it files on the calling repository — then `issues: write` |
 | `review.yml` | `contents: write`, `pull-requests: write`, `issues: write`, `id-token: write` |
 | `promote.yml` | `contents: write`, `pull-requests: write` |
