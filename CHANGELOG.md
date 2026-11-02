@@ -14,6 +14,22 @@ version and is announced here first.
 
 ## [Unreleased]
 
+### Added
+
+- **`provenance.yml`** — refuses a pull request whose body does not open with the fenced `json`
+  declaration naming the plan and phase that authorized the work, or declaring that none did and
+  why. The form is `doctrine/git.md`'s in the shared protocol; what is new is that something
+  enforces it. It reads the body and nothing else — no checkout of the caller, no install, no
+  token, no permissions — and exempts a bot by author type, so it does not stand in front of a
+  dependency bump. Inputs: `body` (required), `pr-author`, `pr-author-type`, `exempt-authors`.
+  Nothing changes for a caller that does not add the job.
+- `scripts/pr-provenance.sh` and its test, which is the whole of that workflow and is what a
+  contributor can run against a body before opening anything.
+- `provenance-self.yml` — this repository calling it on its own pull requests, as `autopilot.yml`
+  calls `review.yml`. Its own file rather than a job in `ci.yml` so that an `edited` body can clear
+  the check without a commit nobody needs, and a caller wants the same shape. Its pull request
+  template opens with the no-phase form.
+
 ## [1.3.0] — 2026-09-23
 
 ### Added

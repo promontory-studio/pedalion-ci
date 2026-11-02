@@ -1,0 +1,59 @@
+name: provenance
+
+# Refuses a pull request whose body does not declare the phase that authorized it. The form and the
+# argument for it are `doctrine/git.md`'s in the shared protocol; what is here is the check, which
+# until now did not exist anywhere -- the declaration had one reader, and that reader reports an
+# absent declaration as *undetermined* rather than refusing it.
+#
+# It reads the body and nothing else: no checkout of the caller, no package install, no token and no
+# permissions, so it costs a runner start and about a second. Call it from a job that is NOT skipped
+# for any author -- a required check reporting SKIPPED blocks a merge forever, which is why the bot
+# exemption is a step the script decides and not a job-level `if:`.
+
+on:
+  workflow_call:
+    inputs:
+      body:
+        description: The pull request body. Pass `github.event.pull_request.body`.
+        required: true
+        type: string
+      pr-author:
+        description: Login that opened the pull request.
+        type: string
+        default: ""
+      pr-author-type:
+        description: >
+          The forge's own `user.type` for that login. `Bot` is exempt: a dependency bot composes its
+          own body and cannot be taught the form, and a gate that refuses every bump is switched off
+          within a day. Pass `github.event.pull_request.user.type`.
+        type: string
+        default: ""
+      exempt-authors:
+        description: Comma-separated logins exempt whatever their type. Empty exempts nobody.
+        type: string
+        default: ""
+
+jobs:
+  provenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Self-locating, so the host never has to be told its own name or be pinned twice. The `job`
+      # context -- not `github` -- is the one that describes the workflow this job came from; the
+      # `github` context describes the caller's.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .pedalion-host
+          persist-credentials: false
+
+      # The body reaches the script through the environment and never through the text of the
+      # command: it is attacker-controlled on any repository a stranger can open a pull request
+      # against, and an interpolation into a `run:` block is that stranger's shell.
+      - run: printf '%s' "$BODY" | .pedalion-host/scripts/pr-provenance.sh
+        env:
+          BODY: ${{ inputs.body }}
+          PR_AUTHOR: ${{ inputs.pr-author }}
+          PR_AUTHOR_TYPE: ${{ inputs.pr-author-type }}
+          EXEMPT_AUTHORS: ${{ inputs.exempt-authors }}

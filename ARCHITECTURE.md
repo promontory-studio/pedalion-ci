@@ -10,24 +10,27 @@ whether a change someone else made is safe.
 
 ## 1. The shape
 
-Six workflow files. **Four are reusable** — a caller names them in `uses:` — and two exist only to
-run this repository's own CI:
+Eight workflow files. **Five are reusable** — a caller names them in `uses:` — and three exist only
+to run this repository's own CI:
 
 ```
    your repository                    this repository                 this repository's own CI
-┌────────────────────┐          ┌───────────────────────┐          ┌──────────────────────┐
-│ .github/           │          │  guard.yml            │          │ ci.yml               │
-│   autopilot.json   │─────────▶│  review.yml           │          │   check              │
-│ a caller workflow  │  uses:   │  promote.yml          │◀─────────│   guard  (dogfood)   │
-│ vars + secrets     │          │  notify-failure.yml   │  local   │   codeql             │
-└────────────────────┘          ├───────────────────────┤          │ autopilot.yml        │
-                                │  actions/             │          └──────────────────────┘
+┌────────────────────┐          ┌───────────────────────┐          ┌────────────────────────┐
+│ .github/           │          │  guard.yml            │          │ ci.yml                 │
+│   autopilot.json   │─────────▶│  review.yml           │          │   check                │
+│ a caller workflow  │  uses:   │  promote.yml          │◀─────────│   guard      (dogfood) │
+│ vars + secrets     │          │  notify-failure.yml   │  local   │   codeql               │
+└────────────────────┘          │  provenance.yml       │          │ autopilot.yml          │
+                                ├───────────────────────┤          │ provenance-self.yml    │
+                                │  actions/             │          └────────────────────────┘
                                 │    setup-node-ci      │
                                 │    codeql-scan        │
                                 └───────────────────────┘
 ```
 
-`src/` is the logic the workflows shell out to. `guard-main.ts` is the entry point `guard.yml`
+`scripts/` is the logic that needs no package: `pr-provenance.sh` is the whole of `provenance.yml`,
+which is why that workflow installs nothing and costs a runner start. `src/` is the logic the
+workflows shell out to. `guard-main.ts` is the entry point `guard.yml`
 invokes; `guard.ts` decides what counts as a violation; `config.ts` parses `.github/autopilot.json`;
 `git.ts` is the diff reader. The split exists so the rules are unit-testable without a workflow run
 — `tests/` hits those modules directly, never a mock of them.
@@ -53,8 +56,8 @@ Two consequences worth knowing before you copy `USAGE.md`'s example verbatim:
 
 ## 3. The host locates itself
 
-`guard.yml` and `promote.yml` both need to check out *this* repository — the host — to run `src/`.
-They do it without being told their own name:
+`guard.yml`, `promote.yml` and `provenance.yml` all need to check out *this* repository — the host
+— to run `src/` or `scripts/`. They do it without being told their own name:
 
 ```yaml
 repository: ${{ job.workflow_repository }}

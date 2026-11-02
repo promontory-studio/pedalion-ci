@@ -29,6 +29,7 @@ jobs:
       # The boundary is the product here, so it is a check and not a review note.
       - run: ./scripts/no-entity-leak.sh
       - run: ./scripts/no-entity-leak.test.sh
+      - run: ./scripts/pr-provenance.test.sh
 
   # Dogfooding: the guard that every caller gets, run against this repository's own pull requests.
   guard:

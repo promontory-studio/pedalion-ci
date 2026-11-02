@@ -89,6 +89,17 @@ No secrets, and no permissions.
 | `app-key` | | Private key for `app-id`. |
 | `issue-token` | | Files into `issue-repo` when no App is configured. |
 
+## `provenance.yml`
+
+| Input | Required | Default | What it does |
+|---|---|---|---|
+| `body` | yes | | The pull request body. Pass `github.event.pull_request.body`. |
+| `pr-author` | | `""` | Login that opened the pull request. Only needed for `exempt-authors` and for the message. |
+| `pr-author-type` | | `""` | The forge's own `user.type` for that login. `Bot` is exempt. Pass `github.event.pull_request.user.type`. |
+| `exempt-authors` | | `""` | Comma-separated logins exempt whatever their type, for an App or token-driven author the forge reports as a person. Empty exempts nobody. |
+
+No secrets, and no permissions — it reads an input and never the forge.
+
 ## `actions/setup-node-ci`
 
 checkout + Node + install, pinned once. Used by every workflow here; usable directly with
