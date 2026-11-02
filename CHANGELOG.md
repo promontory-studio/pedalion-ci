@@ -12,7 +12,7 @@ Breaking changes are named as such. A workflow input is a public API: renaming o
 breaks every caller on the bump they had no reason to read carefully, so it happens in a major
 version and is announced here first.
 
-## [Unreleased]
+## [1.4.0] — 2026-11-02
 
 ### Added
 
@@ -29,6 +29,15 @@ version and is announced here first.
   calls `review.yml`. Its own file rather than a job in `ci.yml` so that an `edited` body can clear
   the check without a commit nobody needs, and a caller wants the same shape. Its pull request
   template opens with the no-phase form.
+
+### Fixed
+
+- **`package-lock.json` declared `1.2.0` while `package.json` declared `1.3.0`.** The v1.3.0 cut
+  bumped the manifest without running an install, so the lockfile carried the previous version in
+  both of the places it records one. Nothing consumes either number — this repository publishes to
+  no registry — which is exactly why it went unnoticed for six weeks.
+- `CHANGELOG.md` had no link definition for `[1.2.0]` or `[1.3.0]`, so two of its four version
+  headings rendered as literal text, and `[Unreleased]` compared against `v1.1.0`.
 
 ## [1.3.0] — 2026-09-23
 
@@ -154,6 +163,8 @@ First release, under the name the repository carried before `pedalion-ci`.
 - `scripts/no-entity-leak.sh` and its test — CI fails on anything tying this repository to one
   estate: a literal repository slug, an unvetted action owner, a `uses:` that is not a full SHA.
 
-[Unreleased]: https://github.com/promontory-studio/pedalion-ci/compare/v1.1.0...HEAD
+[1.4.0]: https://github.com/promontory-studio/pedalion-ci/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/promontory-studio/pedalion-ci/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/promontory-studio/pedalion-ci/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/promontory-studio/pedalion-ci/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/promontory-studio/pedalion-ci/releases/tag/v1.0.0
